@@ -1,6 +1,6 @@
 Gem::Specification.new do |s|
   s.name = 'remotedroid'
-  s.version = '0.1.0'
+  s.version = '0.1.1'
   s.summary = 'A Ruby-MacroDroid related experiment into triggering macros and responding to actions remotely.'
   s.authors = ['James Robertson']
   s.files = Dir['lib/remotedroid.rb']

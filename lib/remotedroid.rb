@@ -9,8 +9,38 @@ require 'sps-sub'
 require 'ruby-macrodroid'
 
 
+# Here's what's available so far:
+# 
+# # Triggers
+#
+# ## Sensors
+# 
+# * proximity (near)
+# * shake device
+#
+# ------------------------------------
+#
+# # Actions
+#
+# ## Date/Time
+#
+# * Say Current Time
+#
+# ## Device Actions
+#
+# * Speak text
+# * Torch toggle
+#
+# ## Notification
+# * Popup Message
+
+
 
 RD_MACROS =<<EOF
+m: Camera flash light
+t: webhook
+a: Torch toggle
+
 m: Torch
 t: webhook
 a: Torch toggle
@@ -22,9 +52,26 @@ a:
   Popup Message
     [lv=msg]
 
+m: Say current time
+t: webhook
+a: Say Current Time
+
+m: Speak text
+v: text
+t: webhook
+a: speak text ([lv=text])
+
 m: shake device
 t: shake device
 a: webhook
+
+m: Proximity near
+t: Proximity near
+a:
+  webhook
+    identifier: proximity
+    option: 0
+
 EOF
 
 module RemoteDroid
@@ -276,6 +323,10 @@ module RemoteDroid
     def export(s)
       @macros = MacroDroid.new(s).macros
     end
+    
+    def invoke(name, options={})      
+      @control.method(name.to_sym).call(options)
+    end
 
     # Object Property (op)
     # Helpful for accessing properites in dot notation 
@@ -360,10 +411,13 @@ module RemoteDroid
       @bluetooth
     end
     
+    def camera_flash_light(options={})
+      http_exec 'camera-flash-light', options
+    end
+        
     def http_exec(command, options={})
       
       url = "https://trigger.macrodroid.com/%s/%s" % [@deviceid, command]
-      File.write '/tmp/foo.txt', 'url : ' + url.inspect #if @debug
       
       if options and options.any? then
         h = options
@@ -375,12 +429,22 @@ module RemoteDroid
       
     end
     
-    def toast(options={})
-      http_exec 'toast', options
+    def say_current_time(options={})
+      http_exec 'say-current-time'
+    end    
+    
+    alias say_time say_current_time
+    
+    def speak_text(options={})
+      http_exec 'speak-text', options
     end
     
-    def torch()
-      @torch
+    def toast(options={})
+      http_exec :toast, options
+    end
+    
+    def torch(options={})
+      http_exec :torch 
     end
 
     def write(s)
@@ -459,4 +523,3 @@ module RemoteDroid
   
   
 end
-
