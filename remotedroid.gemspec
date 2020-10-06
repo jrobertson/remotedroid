@@ -1,7 +1,8 @@
 Gem::Specification.new do |s|
   s.name = 'remotedroid'
-  s.version = '0.2.0'
-  s.summary = 'A Ruby-MacroDroid related experiment into triggering macros and responding to actions remotely.'
+  s.version = '0.3.0'
+  s.summary = 'A Ruby-MacroDroid related experiment into triggering macros ' + 
+      'and responding to actions remotely.'
   s.authors = ['James Robertson']
   s.files = Dir['lib/remotedroid.rb']
   s.add_runtime_dependency('onedrb', '~> 0.1', '>=0.1.0')

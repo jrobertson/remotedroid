@@ -78,6 +78,7 @@ a:
   HTTP GET
     identifier: location
     coords: [lv=coords]
+    type: query
 
 m: shake device
 t: shake device
@@ -322,7 +323,7 @@ module RemoteDroid
   class Controller
     
     attr_reader :model, :control
-    attr_accessor :title, :macros
+    attr_accessor :title, :macros, :store
 
     def initialize(mcs, model=MODEL, deviceid: nil, debug: false)
       
@@ -335,6 +336,8 @@ module RemoteDroid
       if model then
         @model = Model.new(model)
       end
+      
+      @store = {}
 
     end
     
@@ -354,12 +357,12 @@ module RemoteDroid
       @model.op
     end
     
-    def query(trigger)
+    def query(id)
       
-      @h[trigger] = nil
+      @store[id] = nil
       
       # send http request via macrodroid.com API
-      @control.http_exec trigger
+      @control.http_exec id
       
       # wait for the local variable to be updated
       # timeout after 5 seoncds
@@ -367,11 +370,11 @@ module RemoteDroid
       
       begin
         sleep 1
-      end until @h[trigger] or Time.now > t + 5
+      end until @store[id] or Time.now > t + 5
       
-      if @h[trigger] then
-        yield(@h[trigger])
-      end
+
+      return @store[id]
+
       
     end    
     
@@ -408,10 +411,11 @@ module RemoteDroid
     end
     
     alias trigger_fired trigger
+    
+    def update(key, val)
+      @store[key.to_sym] = val      
+    end
         
-    def store()
-      @h
-    end    
 
   end
 
@@ -543,13 +547,29 @@ module RemoteDroid
     def invoke(s, *args)
       @drb.invoke(s, *args)
     end
+    
+    def query(id)
+      
+      t = Time.now
+      h = @drb.query(id)
+      h.merge({latency: (Time.now - t).round(3)})
+      
+    end
+    
+    def update(key, val)
+      @drb.update key.to_sym, val
+    end
+    
+    def store()
+      @drb.store
+    end
       
   end
   
   class TriggerSubscriber < SPSSub
     
     def initialize(host: 'sps.home', drb_host: '127.0.0.1')
-      @remote = OneDrb::Client.new host: drb_host, port: '5777'      
+      @remote = OneDrb::Client.new host: drb_host, port: '5777'    
       super(host: host)
     end
     
@@ -570,7 +590,7 @@ module RemoteDroid
   class ActionSubscriber < SPSSub
     
     def initialize(host: 'sps.home', drb_host: '127.0.0.1')
-      @remote = OneDrb::Client.new host: drb_host, port: '5777'      
+      @remote = OneDrb::Client.new host: drb_host, port: '5777'    
       super(host: host)
     end    
     
@@ -589,5 +609,23 @@ module RemoteDroid
     
   end
   
-  
+  class ResponseSubscriber < SPSSub
+    
+    def initialize(host: 'sps.home', drb_host: '127.0.0.1')
+      @remote = OneDrb::Client.new host: drb_host, port: '5777'    
+      super(host: host)
+    end    
+    
+    def subscribe(topic: 'macrodroid/response')
+      
+      super(topic: topic) do |msg|
+        
+        id, json = msg.split(/:\s+/,2)
+        @remote.update id.to_sym, JSON.parse(json, symbolize_names: true)
+        
+      end
+      
+    end
+    
+  end  
 end
