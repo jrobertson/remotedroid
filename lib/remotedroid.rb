@@ -31,9 +31,14 @@ require 'ruby-macrodroid'
 # * Speak text
 # * Torch toggle
 #
+# ## Location
+#
+# * Share Location
+#
 # ## Notification
+#
 # * Popup Message
-
+#
 
 
 RD_MACROS =<<EOF
@@ -60,6 +65,19 @@ m: Speak text
 v: text
 t: webhook
 a: speak text ([lv=text])
+
+m: Share location
+t: 
+  WebHook
+    identifier: location
+a: Force Location Update    
+a:
+  Share Location
+    coords
+a:
+  HTTP GET
+    identifier: location
+    coords: [lv=coords]
 
 m: shake device
 t: shake device
@@ -336,6 +354,27 @@ module RemoteDroid
       @model.op
     end
     
+    def query(trigger)
+      
+      @h[trigger] = nil
+      
+      # send http request via macrodroid.com API
+      @control.http_exec trigger
+      
+      # wait for the local variable to be updated
+      # timeout after 5 seoncds
+      t = Time.now
+      
+      begin
+        sleep 1
+      end until @h[trigger] or Time.now > t + 5
+      
+      if @h[trigger] then
+        yield(@h[trigger])
+      end
+      
+    end    
+    
     def request(s)
       @model.request s
     end
@@ -369,6 +408,10 @@ module RemoteDroid
     end
     
     alias trigger_fired trigger
+        
+    def store()
+      @h
+    end    
 
   end
 
@@ -429,11 +472,19 @@ module RemoteDroid
       
     end
     
+    def location(options={})
+      http_exec 'location'
+    end    
+    
     def say_current_time(options={})
       http_exec 'say-current-time'
     end    
     
     alias say_time say_current_time
+    
+    def share_location(options={})
+      http_exec 'share-location'
+    end
     
     def speak_text(options={})
       http_exec 'speak-text', options
@@ -446,6 +497,7 @@ module RemoteDroid
     def torch(options={})
       http_exec :torch 
     end
+
 
     def write(s)
             
@@ -476,6 +528,22 @@ module RemoteDroid
       @drb.start
     end
 
+  end
+  
+  class Client
+    
+    def initialize(host='127.0.0.1')
+      @drb = OneDrb::Client.new host: host, port: '5777'    
+    end
+    
+    def export(s)
+      @drb.export(s)
+    end
+    
+    def invoke(s, *args)
+      @drb.invoke(s, *args)
+    end
+      
   end
   
   class TriggerSubscriber < SPSSub
