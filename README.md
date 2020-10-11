@@ -1,3 +1,56 @@
+# RemoteDroid: Querying the battery status and more
+
+    require 'remotedroid'
+
+    r = RemoteDroid::Client.new
+
+    # toggle the torch
+    r.invoke :torch 
+
+    # retrieve the current location of the device
+    location = r.query :location
+    #=> {:coords=>"55.9192166,-3.246983", :latency=>1.496}
+
+    # play a chirpy sound 
+    r = r.invoke :'play-doda'
+
+    # use TTS to say something
+    r.control.speak_text 'hello'
+    r.control.say 'how can I help you?'
+
+    # buzz the device for a brief second
+    r.control.vibrate
+
+    # retrieve the battery status as a percentage
+    r.query.battery
+    #=> 67
+
+    # retrieve the brightness value as a percentage
+    r.query.brightness
+    #=> 15
+
+    # retrive the cell tower used by the device
+    r.query.cell_tower
+    #=> "No CID"
+
+    r.query.cell_tower
+    #=> "No CID" 
+
+    # remember to disable airplane mode before attempting to retrieve the cell_id 
+    r.query.cell_tower
+    #=> "610321820"
+
+    r.query.ip
+    #=> "192.168.4.14"
+
+Note: In order to retrieve a response from the remote device the recipient web server publishes an SPS messsage which is received by an SPS subscriber using the topic *macrodroid/reponse*.
+
+See also: ?Using the RemoteDroid to find your location http://www.jamesrobertson.eu/snippets/2020/oct/09/using-the-remotedroid-to-find-your-location.html?
+
+remotedroid macrodroid 
+
+-------------------
+
 # Running a kind of MacroDroid macro remotely using the RemoteDroid gem
 
 ## Installation
