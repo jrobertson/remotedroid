@@ -30,16 +30,67 @@ require 'ruby-macrodroid'
 #
 # * Speak text
 # * Torch toggle
+# * vibrate
 #
 # ## Location
 #
 # * Share Location
 #
+# ## Media
+#
+# * Play sound (Doda)
+#
 # ## Notification
 #
 # * Popup Message
 #
+#
 
+# Variables which can be queried
+#
+# Description                         Variable
+# -------------------                 ----------------
+# Foreground app name                 :fg_app_name
+# Foreground app package              :fg_app_package
+# Current Brightness                  :current_brightness
+# Screen timeout (seconds)            :screen_timeout
+# Current battery %                   :battery
+# Battery temp °C                     :battery_temp
+# Power (On/Off)                      :power
+# Clipboard text                      :clipboard
+# Current IP address                  :ip
+# Wifi SSID                           :ssid
+# Wifi signal strength                :wifi_strength
+# System time                         :system_time
+# IMEI                                :imei
+# Cell Id                             :cell_id
+# Last known location (lat,lon)       :last_loc_latlong
+# Last known location (altitude)      :last_loc_alt
+# Last known location (link)          :last_loc_link
+# Last known location (time)          :last_loc_age_timestamp
+# Last known location (kmh)           :last_loc_speed_kmh
+# Last known location (mph)           :last_loc_speed_mph
+# Current Volume (Alarm)              :vol_alarm
+# Current Volume (Media / Music)      :vol_music
+# Current Volume (Ringer)             :vol_ring
+# Current Volume (Notification)       :vol_notif
+# Current Volume (System Sounds)      :vol_system
+# Current Volume (Voice Call)         :vol_call
+# Current Volume (Bluetooth Voice)    :vol_bt_voice
+# Device name                         :device_name
+# Device uptime                       :uptime_secs
+# Device manufacturer                 :device_manufacturer
+# Device model                        :device_model
+# Android version                     :android_version
+# Android version (SDK Level)         :android_version_sdk
+# Storage total (external)            :storage_external_total
+# Storage free (external)             :storage_external_free
+# Storage total (internal)            :storage_internal_total
+# Storage free (internal)             :storage_internal_free
+
+
+# The macros below are exported to JSON format as a file which is imported into
+# the Android device running MacroDroid.
 
 RD_MACROS =<<EOF
 m: Camera flash light
@@ -66,6 +117,14 @@ v: text
 t: webhook
 a: speak text ([lv=text])
 
+m: vibrate
+t: webhook
+a: vibrate
+
+m: play doda
+t: webhook
+a: play: Doda
+
 m: Share location
 t: 
   WebHook
@@ -80,6 +139,47 @@ a:
     coords: [lv=coords]
     type: query
 
+m: query
+t: WebHook
+v: qvar
+a:
+  Set Variable
+    var: [[lv=qvar]]
+a:    
+  HTTP GET
+    [lv=qvar]: [lv=var]
+
+m: query setting system
+t: WebHook
+v: qvar
+a:
+  Set Variable
+    var: [setting_system=[lv=qvar]]
+a:    
+  HTTP GET
+    [lv=qvar]: [lv=var]    
+    
+m: query setting global
+t: WebHook
+v: qvar
+a:
+  Set Variable
+    var: [setting_global=[lv=qvar]]
+a:    
+  HTTP GET
+    [lv=qvar]: [lv=var]    
+    
+m: query setting secure
+t: WebHook
+v: qvar
+a:
+  Set Variable
+    var: [setting_secure=[lv=qvar]]
+a:    
+  HTTP GET
+    [lv=qvar]: [lv=var]    
+    
+        
 m: shake device
 t: shake device
 a: webhook
@@ -338,6 +438,7 @@ module RemoteDroid
       end
       
       @store = {}
+      @query = Query.new(self)
 
     end
     
@@ -346,7 +447,12 @@ module RemoteDroid
     end
     
     def invoke(name, options={})      
-      @control.method(name.to_sym).call(options)
+      
+      if @control.respond_to? name.to_sym then
+        @control.method(name.to_sym).call(options)
+      else
+        @control.http_exec name.to_sym, options
+      end
     end
 
     # Object Property (op)
@@ -357,12 +463,33 @@ module RemoteDroid
       @model.op
     end
     
-    def query(id)
+    def query(id=nil)
+      
+      return @query unless id
       
       @store[id] = nil
+
+      sys = %i(accelerometer_rotation)      
+      
+      global = [:airplane_mode_on, :bluetooth_on, :cell_on, :device_name, \
+                :usb_mass_storage_enabled, :wifi_on]       
+      
+      secure = %i(bluetooth_name flashlight_enabled)
+
       
       # send http request via macrodroid.com API
-      @control.http_exec id
+      
+      if id.downcase.to_sym == :location then
+        @control.http_exec id
+      elsif sys.include? id
+        @control.http_exec :'query-setting-system', {qvar: id}        
+      elsif global.include? id
+        @control.http_exec :'query-setting-global', {qvar: id}
+      elsif secure.include? id
+        @control.http_exec :'query-setting-secure', {qvar: id}        
+      else
+        @control.http_exec :query, {qvar: id}
+      end
       
       # wait for the local variable to be updated
       # timeout after 5 seoncds
@@ -372,7 +499,8 @@ module RemoteDroid
         sleep 1
       end until @store[id] or Time.now > t + 5
       
-
+      return {warning: 'HTTP response timeout'} if Time.now > t+5
+      
       return @store[id]
 
       
@@ -412,8 +540,9 @@ module RemoteDroid
     
     alias trigger_fired trigger
     
-    def update(key, val)
-      @store[key.to_sym] = val      
+    def update(id, val)
+      key  = id == :location ? id : val.keys.first.to_sym
+      @store[key] = val      
     end
         
 
@@ -452,7 +581,7 @@ module RemoteDroid
       
       @deviceid, @remote_url, @debug = deviceid, remote_url, debug
       @torch = Torch.new(self)
-    end
+    end    
     
     def bluetooth()
       @bluetooth
@@ -490,9 +619,19 @@ module RemoteDroid
       http_exec 'share-location'
     end
     
-    def speak_text(options={})
+    def speak_text(obj)
+      
+      options = case obj
+      when String
+        {text: obj}
+      when Hash
+        obj
+      end
+    
       http_exec 'speak-text', options
     end
+    
+    alias say speak_text
     
     def toast(options={})
       http_exec :toast, options
@@ -501,6 +640,10 @@ module RemoteDroid
     def torch(options={})
       http_exec :torch 
     end
+    
+    def vibrate(options={})
+      http_exec :vibrate
+    end    
 
 
     def write(s)
@@ -512,9 +655,43 @@ module RemoteDroid
     
     alias export write
     
-    def method_missing(method_name, *args)
+    def method_missing2(method_name, *args)
       http_exec(method_name, args.first)
     end    
+    
+  end
+  
+  class Query
+    
+    def initialize(callback)
+      @callback = callback
+    end
+    
+    def battery()      
+      q(:battery).to_i
+    end
+    
+    def current_brightness()      
+      q(:current_brightness).to_i
+    end
+
+    alias brightness current_brightness
+    
+    def cell_id()      
+      q(:cell_id)
+    end
+    
+    alias cell_tower cell_id
+    
+    def ip()      
+      q(:ip)
+    end    
+    
+    private
+    
+    def q(id)
+      @callback.query(id)[id]
+    end
     
   end
   
@@ -540,6 +717,10 @@ module RemoteDroid
       @drb = OneDrb::Client.new host: host, port: '5777'    
     end
     
+    def control
+      @drb.control
+    end
+    
     def export(s)
       @drb.export(s)
     end
@@ -548,8 +729,9 @@ module RemoteDroid
       @drb.invoke(s, *args)
     end
     
-    def query(id)
+    def query(id=nil)
       
+      return @drb.query unless id
       t = Time.now
       h = @drb.query(id)
       h.merge({latency: (Time.now - t).round(3)})
@@ -620,8 +802,10 @@ module RemoteDroid
       
       super(topic: topic) do |msg|
         
-        id, json = msg.split(/:\s+/,2)
-        @remote.update id.to_sym, JSON.parse(json, symbolize_names: true)
+        json, id = msg.split(/:\s+/,2).reverse
+        h = JSON.parse(json, symbolize_names: true)
+        id ||= h.keys.first
+        @remote.update id.to_sym, h
         
       end
       
