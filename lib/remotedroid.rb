@@ -44,6 +44,9 @@ require 'ruby-macrodroid'
 #
 # * Popup Message
 #
+# ## Screen
+#
+# * Screen On
 #
 
 # Variables which can be queried
@@ -125,6 +128,16 @@ m: play doda
 t: webhook
 a: play: Doda
 
+m: Screen
+v: on: false
+t: WebHook
+a:
+  If on = True
+    Screen On
+  Else
+    Screen Off
+  End If
+  
 m: Share location
 t: 
   WebHook
@@ -190,8 +203,26 @@ a:
   webhook
     identifier: proximity
     option: 0
+    
+m: Power connected
+t: Power Connected: Any
+a: webhook
+    
 
 EOF
+
+=begin
+m: Screen
+v: on: true
+t: WebHook
+a:
+  If on = true
+    Screen On
+  Else
+    Screen Off
+  End If
+
+=end
 
 module RemoteDroid
 
@@ -574,6 +605,13 @@ module RemoteDroid
     end
     
   end
+  
+  class ControlHelper
+    
+    def initialize(callback)
+      @callback
+    end
+  end
 
   class Control        
     
@@ -614,6 +652,25 @@ module RemoteDroid
     end    
     
     alias say_time say_current_time
+    
+    def screen(state=nil)      
+      
+      if state then
+        http_exec 'screen', {on: state == :on} 
+      else        
+        
+        def self.on()
+          http_exec 'screen', {on: true}
+        end
+        
+        def self.off()
+          http_exec 'screen', {on: false} 
+        end
+        
+        self
+        
+      end
+    end
     
     def share_location(options={})
       http_exec 'share-location'
@@ -667,6 +724,10 @@ module RemoteDroid
       @callback = callback
     end
     
+    def airplane_mode_enabled?()
+      q(:airplane_mode_on).to_i > 0 
+    end
+    
     def battery()      
       q(:battery).to_i
     end
@@ -686,6 +747,11 @@ module RemoteDroid
     def ip()      
       q(:ip)
     end    
+    
+    def location()      
+      @callback.query(:location)[:coords]
+    end
+
     
     private
     
@@ -744,6 +810,50 @@ module RemoteDroid
     
     def store()
       @drb.store
+    end
+    
+    # -- helpful methods -----------------
+    
+    def battery()
+      query.battery
+    end
+    
+    def cell_tower()
+      query.cell_tower
+    end
+    
+    def location()
+      query.location
+    end
+    
+    def say(text)
+      control.say text
+    end
+    
+    def say_time()
+      control.say_time
+    end
+    
+    alias saytime say_time
+    
+    def screen(state=nil)      
+      control.screen state
+    end
+    
+    def screen_on()
+      screen :on
+    end
+    
+    def screen_off()
+      screen :off
+    end
+    
+    def torch()
+      control.torch
+    end    
+    
+    def vibrate
+      control.vibrate
     end
       
   end
