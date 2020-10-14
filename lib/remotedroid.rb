@@ -22,6 +22,10 @@ require 'ruby-macrodroid'
 #
 # # Actions
 #
+## Connectivity
+#
+# * Enable HotSpot
+#
 # ## Date/Time
 #
 # * Say Current Time
@@ -137,6 +141,17 @@ a:
   Else
     Screen Off
   End If
+
+m: Hotspot
+v: enable: false
+t: WebHook
+a:
+  If enable = True
+    Enable Hotspot
+  Else
+    Disable Hotspot
+  End If
+
   
 m: Share location
 t: 
@@ -628,6 +643,33 @@ module RemoteDroid
     def camera_flash_light(options={})
       http_exec 'camera-flash-light', options
     end
+    
+    def hotspot(state=nil)      
+      
+      if state then
+        http_exec 'hotspot', {enable: state == :enable} 
+      else        
+
+        def self.enable()
+          http_exec 'hotspot', {enable: true}
+        end                
+        
+        def self.on()
+          self.enable
+        end                
+        
+        def self.disable()
+          http_exec 'hotspot', {enable: false} 
+        end
+        
+        def self.off()
+          self.disable
+        end         
+        
+        self
+        
+      end
+    end    
         
     def http_exec(command, options={})
       
@@ -822,12 +864,16 @@ module RemoteDroid
       query.cell_tower
     end
     
+    def hotspot(state=nil)      
+      control.hotspot state
+    end    
+    
     def location()
       query.location
     end
     
     def say(text)
-      control.say text
+      control.speak_text text
     end
     
     def say_time()
