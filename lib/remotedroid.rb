@@ -13,6 +13,10 @@ require 'ruby-macrodroid'
 # 
 # # Triggers
 #
+# ## Device Events
+#
+# * screen on
+#
 # ## Sensors
 # 
 # * proximity (near)
@@ -22,7 +26,11 @@ require 'ruby-macrodroid'
 #
 # # Actions
 #
-## Connectivity
+# ## Camera/Photo
+#
+# * Take Picture
+#
+# ## Connectivity
 #
 # * Enable HotSpot
 #
@@ -152,7 +160,12 @@ a:
     Disable Hotspot
   End If
 
-  
+m: Take Picture
+t: webhook
+a:
+  Take Picture
+    Rear Facing
+
 m: Share location
 t: 
   WebHook
@@ -222,7 +235,10 @@ a:
 m: Power connected
 t: Power Connected: Any
 a: webhook
-    
+
+m: screen on off
+t: screen on
+a: webhook
 
 EOF
 
@@ -731,6 +747,13 @@ module RemoteDroid
     end
     
     alias say speak_text
+
+    def take_picture(options={})
+      http_exec :'take-picture', options
+    end
+    
+    alias take_photo take_picture
+
     
     def toast(options={})
       http_exec :toast, options
@@ -872,6 +895,10 @@ module RemoteDroid
       query.location
     end
     
+    def photo()
+      take_picture
+    end
+    
     def say(text)
       control.speak_text text
     end
@@ -892,6 +919,31 @@ module RemoteDroid
     
     def screen_off()
       screen :off
+    end
+    
+    def take_picture(ftp_src: nil, fileout: '.')
+      
+      screen.on
+      r = control.take_picture
+            
+      if ftp_src then
+        
+        # the sleep statement will be replaced in the near future, 
+        # but it's fine to demonstrate it works
+        sleep 8         
+        
+        credentials, dir = ftp_src.match(/(ftp:\/\/[^\/]+)\/([^$]+)/).captures
+        ftp = MyMediaFTP.new(credentials)
+        ftp.cd dir
+        filename = ftp.ls.sort_by {|x| x[:ctime]}.last[:name]
+        ftp.cp filename, fileout
+        
+      end
+      
+    end   
+    
+    def take_photo()
+      control.take_photo
     end
     
     def torch()
