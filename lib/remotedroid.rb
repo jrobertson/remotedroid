@@ -58,6 +58,7 @@ require 'ruby-macrodroid'
 #
 # ## Screen
 #
+# * Keep Device Awake
 # * Screen On
 #
 
@@ -165,6 +166,16 @@ t: webhook
 a:
   Take Picture
     Rear Facing
+a: wait 2 seconds
+a: webhook
+
+m: stay awake
+t: webhook
+a: stay awake
+
+m: stay awake off
+t: webhook
+a: stay awake off
 
 m: Share location
 t: 
@@ -549,6 +560,8 @@ module RemoteDroid
         @control.http_exec :'query-setting-global', {qvar: id}
       elsif secure.include? id
         @control.http_exec :'query-setting-secure', {qvar: id}        
+      elsif id.downcase.to_sym == :'take-picture'
+        @control.http_exec id
       else
         @control.http_exec :query, {qvar: id}
       end
@@ -559,7 +572,7 @@ module RemoteDroid
       
       begin
         sleep 1
-      end until @store[id] or Time.now > t + 5
+      end until @store[id] or Time.now > t + 10
       
       return {warning: 'HTTP response timeout'} if Time.now > t+5
       
@@ -603,11 +616,16 @@ module RemoteDroid
     alias trigger_fired trigger
     
     def update(id, val)
-      key  = id == :location ? id : val.keys.first.to_sym
+      
+      key  = if %i(location take-picture).include? id
+        id
+      else
+        val.keys.first.to_sym
+      end
+      
       @store[key] = val      
     end
         
-
   end
 
   class Service
@@ -747,9 +765,17 @@ module RemoteDroid
     end
     
     alias say speak_text
+    
+    def stay_awake(options={})
+      http_exec 'stay-awake', options
+    end
 
+    def stay_awake_off(options={})
+      http_exec 'stay-awake-off', options
+    end
+    
     def take_picture(options={})
-      http_exec :'take-picture', options
+      http_exec 'take-picture', options
     end
     
     alias take_photo take_picture
@@ -817,6 +843,9 @@ module RemoteDroid
       @callback.query(:location)[:coords]
     end
 
+    def take_picture()      
+      @callback.query(:'take-picture')
+    end
     
     private
     
@@ -921,16 +950,24 @@ module RemoteDroid
       screen :off
     end
     
+    def stay_awake()
+      control.stay_awake
+    end
+    
+    def stay_awake_off()
+      control.stay_awake_off
+    end
+    
     def take_picture(ftp_src: nil, fileout: '.')
       
-      screen.on
-      r = control.take_picture
+      #screen.on
+      r = query.take_picture
             
       if ftp_src then
         
         # the sleep statement will be replaced in the near future, 
         # but it's fine to demonstrate it works
-        sleep 8         
+        #sleep 8         
         
         credentials, dir = ftp_src.match(/(ftp:\/\/[^\/]+)\/([^$]+)/).captures
         ftp = MyMediaFTP.new(credentials)
@@ -942,9 +979,7 @@ module RemoteDroid
       
     end   
     
-    def take_photo()
-      control.take_photo
-    end
+    alias take_photo take_picture
     
     def torch()
       control.torch
@@ -1011,6 +1046,7 @@ module RemoteDroid
       super(topic: topic) do |msg|
         
         json, id = msg.split(/:\s+/,2).reverse
+        
         h = JSON.parse(json, symbolize_names: true)
         id ||= h.keys.first
         @remote.update id.to_sym, h
