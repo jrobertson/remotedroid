@@ -14,14 +14,29 @@ require 'ruby-macrodroid'
 # 
 # # Triggers
 #
+# ## Battery/Power
+#
+# * Power button toggle
+#
+# ## Connectivity
+#
+# ### Wifi State Change
+#
+# * Connected to Network
+#
 # ## Device Events
 #
 # * screen on
 #
 # ## Sensors
-# 
+#
+# * Activity Recognition
 # * proximity (near)
 # * shake device
+#
+# ## User Input
+#
+# * Swipe Screen
 #
 # ------------------------------------
 #
@@ -264,6 +279,94 @@ a: webhook
 m: screen on off
 t: screen on
 a: webhook
+
+m: Power Button Toggle3
+t: Power Button Toggle (3)
+a: webhook
+
+m: Power Button Toggle4
+t: Power Button Toggle (4)
+a: webhook
+
+m: Power Button Toggle5
+t: Power Button Toggle (5)
+a: webhook
+
+m: Connected to network
+t:
+  Connected to network
+    Any Network
+a: wait 2 seconds    
+a:
+  webhook
+    ssid: [ssid]
+
+m: In Vehicle
+t:
+  Activity - In Vehicle
+    Confidence >= 50%
+a: webhook    
+
+m: On Bicycle
+t:
+  Activity - On Bicycle
+    Confidence >= 50%
+a: webhook
+
+m: Running
+t:
+  Activity - Running
+    Confidence >= 50%
+a: webhook    
+
+m: Walking
+t:
+  Activity - Walking
+    Confidence >= 50%
+a: webhook
+
+m: Still
+t:
+  Activity - Still
+    Confidence >= 83%
+a: webhook
+
+m: Swipe top left across
+t:
+  Swipe Screen
+    Top Left - Across
+a: webhook
+
+m: Swipe top left diagonal
+t:
+  Swipe Screen
+    Top Left - Diagonal
+a: webhook
+
+m: Swipe top left down
+t:
+  Swipe Screen
+    Top Left - Down
+a: webhook
+
+m: Swipe top right across
+t:
+  Swipe Screen
+    Top Right - Across
+a: webhook
+
+m: Swipe top right diagonal
+t:
+  Swipe Screen
+    Top Right - Diagonal
+a: webhook
+
+m: Swipe top right down
+t:
+  Swipe Screen
+    Top Right - Down
+a: webhook
+
 
 EOF
 
