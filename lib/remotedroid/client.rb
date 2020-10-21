@@ -3,8 +3,9 @@ module RemoteDroid
   class Client
     using ColouredText
     
-    def initialize(host='127.0.0.1')
-      @drb = OneDrb::Client.new host: host, port: '5777'    
+    def initialize(hostx='127.0.0.1', host: hostx, port: '5777', sps_host: 'sps.home', sps_port: '59000')
+      @drb = OneDrb::Client.new host: host, port: port    
+      @sps = SPSPub.new host: sps_host, port: sps_port
     end
     
     def control
@@ -32,12 +33,21 @@ module RemoteDroid
       
     end
     
+    def run_macro(name)
+      a = @drb.run_macro name
+      a.each {|msg| @sps.notice 'macrodroid/action: ' + msg }
+    end
+    
     def update(key, val)
       @drb.update key.to_sym, val
     end
     
     def store()
       @drb.store
+    end
+    
+    def syslog()
+      @drb.syslog
     end
     
     # -- helpful methods -----------------

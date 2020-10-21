@@ -2,7 +2,7 @@ module RemoteDroid
   
   class Controller
     
-    attr_reader :model, :control
+    attr_reader :model, :control, :syslog
     attr_accessor :title, :macros, :store
 
     def initialize(mcs, model=MODEL, deviceid: nil, debug: false)
@@ -25,18 +25,25 @@ module RemoteDroid
       names = @macros.map {|x| x.triggers.first.type}.uniq
       #@control.enable names.first.to_s.gsub('_',' ')
       puts 'Enabling ' + names.join(',')
-      
+=begin      
       Thread.new do
         names.each do |title|
           @control.enable title.to_s.gsub('_',' ')
           sleep 0.8
         end
       end
-
+=end
     end
     
-    def export(s)
-      @macros = MacroDroid.new(s).macros
+    def delete_all()
+      @macros = []
+    end
+    
+    def export(s, replace: false)
+      
+      macros = MacroDroid.new(s).macros
+      replace ? @macros = macros : @macros << macros
+      
     end
     
     def invoke(name, options={})      
@@ -105,8 +112,17 @@ module RemoteDroid
       @model.request s
     end
     
+    def run_macro(macro_name: '')
+      
+      found = @macros.find do |macro|
+        macro.title.downcase == macro_name.downcase
+      end
+      
+      found.run if found
+      
+    end
     
-    def trigger(name, detail={time: Time.now})
+    def trigger(name, detail={})
       
       macros = @macros.select do |macro|
         
@@ -117,12 +133,14 @@ module RemoteDroid
         #
         valid_trigger = macro.match?(name, detail, @model.op)
         
-        puts 'valid_trigger: ' + valid_trigger.inspect if @debug
+        #puts 'valid_trigger: ' + valid_trigger.inspect if @debug
         
-        if valid_trigger then
-          @syslog << [Time.now, :trigger, name] 
-          @syslog << [Time.now, :macro, macro.title]
-        end
+        #if valid_trigger then
+        #  @syslog << [Time.now, :trigger, name] 
+        #  @syslog << [Time.now, :macro, macro.title]
+        #end
+        
+        @syslog << [Time.now, name, detail]
                      
         valid_trigger
         
@@ -143,7 +161,9 @@ module RemoteDroid
         val.keys.first.to_sym
       end
       
-      @store[key] = val      
+      @syslog << [id, val]      
+      @store[key] = val   
+      
     end
         
   end

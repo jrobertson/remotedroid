@@ -305,71 +305,130 @@ m: In Vehicle
 t:
   Activity - In Vehicle
     Confidence >= 50%
-a: webhook    
+a:
+  webhook
+    identifier: activity
+    index: 0
 
 m: On Bicycle
 t:
   Activity - On Bicycle
     Confidence >= 50%
-a: webhook
-
+a:
+  webhook
+    identifier: activity
+    index: 1
+    
 m: Running
 t:
   Activity - Running
     Confidence >= 50%
-a: webhook    
+a:
+  webhook
+    identifier: activity
+    index: 2
 
 m: Walking
 t:
   Activity - Walking
     Confidence >= 50%
-a: webhook
+a:
+  webhook
+    identifier: activity
+    index: 3
 
 m: Still
 t:
   Activity - Still
     Confidence >= 83%
-a: webhook
-
+a:
+  webhook
+    identifier: activity
+    index: 4
+    
 m: Swipe top left across
 t:
   Swipe Screen
     Top Left - Across
-a: webhook
+a:
+  webhook
+    identifier: swipe
+    start: 0
+    motion: 0
 
 m: Swipe top left diagonal
 t:
   Swipe Screen
     Top Left - Diagonal
-a: webhook
+a:
+  webhook
+    identifier: swipe
+    start: 0
+    motion: 1
 
 m: Swipe top left down
 t:
   Swipe Screen
     Top Left - Down
-a: webhook
+a:
+  webhook
+    identifier: swipe
+    start: 0
+    motion: 2
 
 m: Swipe top right across
 t:
   Swipe Screen
     Top Right - Across
-a: webhook
+a:
+  webhook
+    identifier: swipe
+    start: 1
+    motion: 0    
+    
 
 m: Swipe top right diagonal
 t:
   Swipe Screen
     Top Right - Diagonal
-a: webhook
+a:
+  webhook
+    identifier: swipe
+    start: 1
+    motion: 1
 
 m: Swipe top right down
 t:
   Swipe Screen
     Top Right - Down
-a: webhook
+a:
+  webhook
+    identifier: swipe
+    start: 1
+    motion: 2
 
+m: flip from up to down
+t: Flip Device Face Up -> Face Down
+a:
+  webhook
+    identifier: flip_device
+    facedown: true
 
+m: flip from down to up
+t: Flip Device Face Down -> Face Up
+a:
+  webhook
+    identifier: flip_device
+    facedown: false    
 EOF
+s="
+    
 
+
+
+   
+
+"
 
 module RemoteDroid
   
@@ -423,8 +482,20 @@ module RemoteDroid
         
         context, json = msg.split(/:\s+/,2)
         category, action = context.split('/',2)
-        @remote.control.method(action.to_sym)\
+        
+        if action == 'force_macro_run' then
+          
+          self.notice 'macrodroid2: fmr'
+          a = @remote.run_macro(JSON.parse(json, symbolize_names: true))
+
+          a.each do |msg|
+            self.notice 'macrodroid/action: ' + msg
+          end
+
+        else
+          @remote.control.method(action.to_sym)\
             .call(JSON.parse(json, symbolize_names: true))
+        end
         
       end
       
