@@ -60,6 +60,10 @@ module RemoteDroid
       query.cell_tower
     end
     
+    def control_media(option='Play/Pause')
+      control.control_media({option: option})
+    end    
+    
     def disable(macro)
       control.disable macro
     end
@@ -70,7 +74,13 @@ module RemoteDroid
     
     def hotspot(state=nil)      
       control.hotspot state
-    end    
+    end
+
+    def launch_activity(app='')
+      control.launch_activity(app)
+    end
+    
+    alias launch launch_activity
     
     def location()
       query.location
@@ -98,10 +108,30 @@ module RemoteDroid
       end
       
     end
+
+    def next()
+      control_media(option='Next')
+    end
+    
+    def pause()
+      control_media(option='Pause')
+    end    
+
+    def play()
+      control_media(option='Play')
+    end    
+    
+    def play_pause()
+      control_media(option='Play/Pause')
+    end
     
     def photo()
       take_picture
     end
+    
+    def previous()
+      control_media(option='Previous')
+    end    
     
     def say(text)
       control.speak_text text
@@ -131,6 +161,10 @@ module RemoteDroid
     
     def stay_awake_off()
       control.stay_awake_off
+    end
+    
+    def stop()
+      control_media(option='Stop')
     end
     
     def take_picture(ftp_src: nil, fileout: '.')

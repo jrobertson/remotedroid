@@ -16,13 +16,21 @@ module RemoteDroid
       http_exec 'camera-flash-light', options
     end
     
+    def control_media(options={})      
+      http_exec 'media-' + options[:option].downcase.gsub(/\W/,'-')
+    end
+    
     def disable(macro)
       http_exec 'disable-macro', {name: macro}
     end
     
     def enable(macro)
       http_exec 'enable-macro', {name: macro}
-    end    
+    end
+    
+    def force_macro_run(options={})
+      http_exec option[:macro_name].downcase.gsub(/ /,'-')
+    end
     
     def hotspot(state=nil)      
       
@@ -63,6 +71,11 @@ module RemoteDroid
       
       s = open(url).read
       
+    end
+    
+    def launch_activity(options={})
+      app = options[:app].downcase.gsub(/ /,'-')
+      http_exec 'launch-' + app
     end
     
     def location(options={})

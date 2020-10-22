@@ -197,6 +197,47 @@ m: stay awake off
 t: webhook
 a: stay awake off
 
+m: Launch Google Play Music
+t: webhook
+a: Launch Google Play Music
+
+
+m: Media Next
+t: webhook
+a:
+  Media Next
+    Simulate Media Button (Google Play Music)
+    
+m: Media Pause
+t: webhook
+a:
+  Media Pause
+    Simulate Media Button (Google Play Music)
+    
+m: Media Play
+t: webhook
+a:
+  Media Play
+    Simulate Media Button (Google Play Music)
+    
+m: Media Play Pause
+t: webhook
+a:
+  Media Play/Pause
+    Simulate Media Button (Google Play Music)
+
+m: Media Previous
+t: webhook
+a:
+  Media Previous
+    Simulate Media Button (Google Play Music)
+    
+m: Media Stop
+t: webhook
+a:
+  Media Stop
+    Simulate Media Button (Google Play Music)    
+    
 m: Share location
 t: 
   WebHook
@@ -276,9 +317,12 @@ m: Power connected
 t: Power Connected: Any
 a: webhook
 
-m: screen on off
+m: Screen on
 t: screen on
-a: webhook
+a:
+  webhook
+    identifier: screen_on_off
+    screen_on: true
 
 m: Power Button Toggle3
 t: Power Button Toggle (3)
@@ -421,14 +465,7 @@ a:
     identifier: flip_device
     facedown: false    
 EOF
-s="
-    
 
-
-
-   
-
-"
 
 module RemoteDroid
   
@@ -483,18 +520,17 @@ module RemoteDroid
         context, json = msg.split(/:\s+/,2)
         category, action = context.split('/',2)
         
-        if action == 'force_macro_run' then
+        h = JSON.parse(json, symbolize_names: true)
+        
+        if action == 'force_macro_run' and h[:serverside] then
           
-          self.notice 'macrodroid2: fmr'
-          a = @remote.run_macro(JSON.parse(json, symbolize_names: true))
-
-          a.each do |msg|
-            self.notice 'macrodroid/action: ' + msg
-          end
+          a = @remote.run_macro(h)
+          a.each {|msg| self.notice 'macrodroid/action: ' + msg }
 
         else
-          @remote.control.method(action.to_sym)\
-            .call(JSON.parse(json, symbolize_names: true))
+          
+          @remote.control.method(action.to_sym).call(h)
+          
         end
         
       end
