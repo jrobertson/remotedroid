@@ -71,6 +71,12 @@ module RemoteDroid
     def enable(macro)
       control.enable macro
     end    
+
+    def fill_clipboard(text)
+      control.fill_clipboard clipboard: text
+    end
+    
+    alias copy fill_clipboard
     
     def hotspot(state=nil)      
       control.hotspot state
@@ -107,6 +113,10 @@ module RemoteDroid
         
       end
       
+    end
+    
+    def ip()
+      query.ip
     end
 
     def next()

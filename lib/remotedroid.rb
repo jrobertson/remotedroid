@@ -237,6 +237,25 @@ t: webhook
 a:
   Media Stop
     Simulate Media Button (Google Play Music)    
+
+m: Open website
+v: url
+t: webhook
+a: goto [lv=url]
+
+m: Fill clipboard
+v: clipboard
+t: webhook
+a:
+  Fill Clipboard
+    [lv=clipboard]
+    
+m: click text content
+v: content
+t: webhook
+a:
+  UI Interaction
+    Click [[lv=content]]
     
 m: Share location
 t: 

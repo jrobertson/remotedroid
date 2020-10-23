@@ -28,6 +28,10 @@ module RemoteDroid
       http_exec 'enable-macro', {name: macro}
     end
     
+    def fill_clipboard(options={})
+      http_exec 'fill-clipboard', options
+    end    
+    
     def force_macro_run(options={})
       http_exec option[:macro_name].downcase.gsub(/ /,'-')
     end
