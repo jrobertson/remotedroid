@@ -50,6 +50,10 @@ module RemoteDroid
       @callback.query(:'take-picture')
     end
     
+    def take_screenshot()      
+      @callback.query(:'take-screenshot')
+    end    
+    
     private
     
     def q(id)

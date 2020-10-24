@@ -60,6 +60,10 @@ module RemoteDroid
       query.cell_tower
     end
     
+    def click(s)
+      control.click content: s
+    end
+    
     def control_media(option='Play/Pause')
       control.control_media({option: option})
     end    
@@ -83,8 +87,23 @@ module RemoteDroid
     end
 
     def launch_activity(app='')
-      control.launch_activity(app)
+            
+      package = APPS[app]
+      
+      if package then
+        control.launch_package package: package
+      else       
+        r = APPS.find {|k,v| k =~ /#{app}/i}
+        control.launch_package(package: r[1]) if r
+      end        
+
     end
+    
+    def launch_package(name='')
+      
+      control.launch_package(package: name)
+
+    end    
     
     alias launch launch_activity
     
@@ -95,7 +114,6 @@ module RemoteDroid
     def location_watch(refresh: '1 minute', interval: refresh, 
                        duration: '30 minutes')
       
-
       d = ChronicDuration.parse(duration)
       seconds = ChronicDuration.parse(interval)
       puts ("monitoring location every %s for %s" % [interval, duration]).info
@@ -114,6 +132,13 @@ module RemoteDroid
       end
       
     end
+    
+    def open_website(url)
+      control.open_website url: url
+    end
+    
+    alias goto open_website
+    alias visit open_website
     
     def ip()
       query.ip
@@ -198,6 +223,26 @@ module RemoteDroid
     end   
     
     alias take_photo take_picture
+    
+    def take_screenshot(ftp_src: nil, fileout: '.')
+      
+      #screen.on
+      r = query.take_screenshot
+            
+      if ftp_src then
+        
+        # give the device a second to write the image to file
+        sleep 1
+        
+        credentials, dir = ftp_src.match(/(ftp:\/\/[^\/]+)\/([^$]+)/).captures
+        ftp = MyMediaFTP.new(credentials)
+        ftp.cd dir
+        filename = ftp.ls.sort_by {|x| x[:ctime]}.last[:name]
+        ftp.cp filename, fileout
+        
+      end
+      
+    end      
     
     def torch()
       control.torch

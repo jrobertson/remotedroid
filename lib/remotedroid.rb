@@ -249,14 +249,27 @@ t: webhook
 a:
   Fill Clipboard
     [lv=clipboard]
-    
+
 m: click text content
 v: content
 t: webhook
 a:
   UI Interaction
-    Click [[lv=content]]
+    Click [[lv=content]]    
     
+m: Launch by package
+v: package
+t: webhook
+a: Launch [lv=package]
+    
+m: Take Screenshot
+t: webhook
+a:
+  Take Screenshot
+    Save to device
+a: wait 2 seconds
+a: webhook
+
 m: Share location
 t: 
   WebHook
@@ -484,7 +497,15 @@ a:
     identifier: flip_device
     facedown: false    
 EOF
-
+s='
+    
+m: click text content
+v: content
+t: webhook
+a:
+  UI Interaction
+    Click [[[lv=content]]]
+    '
 
 module RemoteDroid
   

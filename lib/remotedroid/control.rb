@@ -16,6 +16,10 @@ module RemoteDroid
       http_exec 'camera-flash-light', options
     end
     
+    def click(options={content: ''})
+      http_exec 'click-text-content', options
+    end
+    
     def control_media(options={})      
       http_exec 'media-' + options[:option].downcase.gsub(/\W/,'-')
     end
@@ -77,14 +81,37 @@ module RemoteDroid
       
     end
     
-    def launch_activity(options={})
-      app = options[:app].downcase.gsub(/ /,'-')
-      http_exec 'launch-' + app
+    def launch_activity(options={app: ''})
+      
+      return if options[:app].empty?
+      
+      app = options[:app]
+      
+      package = APPS[app]
+      
+      if package then
+        launch_package package: package
+      else       
+        r = APPS.find {|k,v| k =~ /#{app}/i}
+        launch_package(package: r[1]) if r
+      end      
+      
     end
+    
+    def launch_package(options={package: 'com.google.android.chrome'})
+      http_exec 'launch-by-package', options
+    end    
     
     def location(options={})
       http_exec 'location'
     end    
+    
+    def open_website(options={url: ''})
+      http_exec 'open-website', options
+    end
+    
+    alias goto open_website
+    alias visit open_website
     
     def say_current_time(options={})
       http_exec 'say-current-time'
