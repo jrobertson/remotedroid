@@ -52,7 +52,28 @@ module RemoteDroid
     
     def take_screenshot()      
       @callback.query(:'take-screenshot')
+    end   
+    
+    def volume(context=nil)
+      
+      if context then
+        q(context)
+      else        
+        
+        def self.alarm()     q(:vol_alarm)    end        
+        def self.bt_voice()  q(:vol_bt_voice) end
+        def self.call()      q(:vol_call)     end          
+        def self.music()     q(:vol_music)    end
+        def self.notify()    q(:vol_notif)   end
+        def self.system()    q(:vol_system)   end          
+          
+        self
+        
+      end
     end    
+    
+    alias vol volume
+    
     
     private
     

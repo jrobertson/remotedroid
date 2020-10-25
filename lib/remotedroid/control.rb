@@ -8,8 +8,12 @@ module RemoteDroid
 
     end    
     
+    def ask_alexa(options={})
+      http_exec 'ask-alexa', options
+    end    
+    
     def bluetooth()
-      @bluetooth
+      #to-do
     end
     
     def camera_flash_light(options={})
@@ -138,6 +142,29 @@ module RemoteDroid
       end
     end
     
+    def set_auto_rotate(state=nil)
+      
+      if state then
+        http_exec 'set-auto-rotate', {state: state} 
+      else        
+        
+        def self.on()
+          http_exec 'set-auto-rotate', {state: 0}
+        end
+        
+        def self.off()
+          http_exec 'set-auto-rotate', {state: 1} 
+        end
+        
+        def self.toggle()
+          http_exec 'set-auto-rotate', {state: 2} 
+        end        
+        
+        self
+        
+      end      
+    end    
+    
     def share_location(options={})
       http_exec 'share-location'
     end
@@ -170,6 +197,9 @@ module RemoteDroid
     
     alias take_photo take_picture
 
+    def take_screenshot(options={})
+      http_exec 'take-screenshot', options
+    end    
     
     def toast(options={})
       http_exec :toast, options
@@ -181,6 +211,10 @@ module RemoteDroid
     
     def vibrate(options={})
       http_exec :vibrate
+    end    
+        
+    def voice_search(options={})
+      http_exec 'voice-search'
     end    
 
 

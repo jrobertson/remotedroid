@@ -52,6 +52,10 @@ module RemoteDroid
     
     # -- helpful methods -----------------
     
+    def ask_alexa()
+      control.ask_alexa
+    end
+    
     def battery()
       query.battery
     end
@@ -86,7 +90,7 @@ module RemoteDroid
       control.hotspot state
     end
 
-    def launch_activity(app='')
+    def launch_activity(app)
             
       package = APPS[app]
       
@@ -99,7 +103,7 @@ module RemoteDroid
 
     end
     
-    def launch_package(name='')
+    def launch_package(name)
       
       control.launch_package(package: name)
 
@@ -145,19 +149,19 @@ module RemoteDroid
     end
 
     def next()
-      control_media(option='Next')
+      control_media('Next')
     end
     
     def pause()
-      control_media(option='Pause')
+      control_media('Pause')
     end    
 
     def play()
-      control_media(option='Play')
+      control_media('Play')
     end    
     
     def play_pause()
-      control_media(option='Play/Pause')
+      control_media('Play/Pause')
     end
     
     def photo()
@@ -165,7 +169,7 @@ module RemoteDroid
     end
     
     def previous()
-      control_media(option='Previous')
+      control.control_media(option: 'Previous')
     end    
     
     def say(text)
@@ -190,6 +194,22 @@ module RemoteDroid
       screen :off
     end
     
+    def set_auto_rotate(state=nil)
+      control.set_auto_rotate state
+    end
+    
+    def set_auto_rotate_on()
+      control.set_auto_rotate 0
+    end    
+    
+    def set_auto_rotate_off()
+      control.set_auto_rotate 1
+    end
+    
+    def set_auto_rotate_toggle()
+      control.set_auto_rotate 2
+    end
+
     def stay_awake()
       control.stay_awake
     end
@@ -198,17 +218,20 @@ module RemoteDroid
       control.stay_awake_off
     end
     
+    alias awake_off stay_awake_off
+    
     def stop()
-      control_media(option='Stop')
+      control_media(option: 'Stop')
     end
     
     def take_picture(ftp_src: nil, fileout: '.')
       
       #screen.on
-      r = query.take_picture
+      #launch 'camera'
             
       if ftp_src then
         
+        r = query.take_picture        
         # give the device a second to write the image to file
         sleep 1
         
@@ -217,6 +240,10 @@ module RemoteDroid
         ftp.cd dir
         filename = ftp.ls.sort_by {|x| x[:ctime]}.last[:name]
         ftp.cp filename, fileout
+        
+      else
+        
+        contro.take_picture
         
       end
       
@@ -227,10 +254,11 @@ module RemoteDroid
     def take_screenshot(ftp_src: nil, fileout: '.')
       
       #screen.on
-      r = query.take_screenshot
+ 
             
       if ftp_src then
-        
+         
+        r = query.take_screenshot
         # give the device a second to write the image to file
         sleep 1
         
@@ -251,6 +279,26 @@ module RemoteDroid
     def vibrate
       control.vibrate
     end
+    
+    def voice_search
+      control.voice_search
+    end    
+    
+    def volume(context=nil)      
+      query.volume context
+    end
+
+    alias vol volume
       
   end
+  
+  
+  class WebServer < AppHttp
+    
+    def initialize(port: 9292)
+      super(RemoteDroid::Client.new, port: port)
+    end
+    
+  end
+  
 end

@@ -45,6 +45,7 @@ require 'ruby-macrodroid'
 # ## Camera/Photo
 #
 # * Take Picture
+# * Take Screenshot
 #
 # ## Connectivity
 #
@@ -66,7 +67,7 @@ require 'ruby-macrodroid'
 #
 # ## MacroDroid specific
 #
-# * Disable Macro
+# * Enable/Disable Macro
 #
 # ## Media
 #
@@ -79,7 +80,7 @@ require 'ruby-macrodroid'
 # ## Screen
 #
 # * Keep Device Awake
-# * Screen On
+# * Screen On/Off
 #
 
 # Variables which can be queried
@@ -269,6 +270,27 @@ a:
     Save to device
 a: wait 2 seconds
 a: webhook
+
+m: Voice search
+t: webhook
+a: Voice search
+
+m: Ask Alexa
+t: webhook
+a: shortcut Ask Alexa
+
+m: Set Auto Rotate
+; toggle doesn't currently work because of a bug with else if
+v: state
+t: webhook
+a:
+  if state = 0
+    Auto Rotate On
+  Else If
+    Auto Rotate Off
+  else
+    Auto Rotate Toggle
+  end if
 
 m: Share location
 t: 
@@ -497,15 +519,7 @@ a:
     identifier: flip_device
     facedown: false    
 EOF
-s='
-    
-m: click text content
-v: content
-t: webhook
-a:
-  UI Interaction
-    Click [[[lv=content]]]
-    '
+
 
 module RemoteDroid
   
