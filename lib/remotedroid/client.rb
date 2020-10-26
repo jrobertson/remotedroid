@@ -60,6 +60,10 @@ module RemoteDroid
       query.battery
     end
     
+    def bluetooth()
+      control.bluetooth
+    end
+    
     def cell_tower()
       query.cell_tower
     end
@@ -72,13 +76,37 @@ module RemoteDroid
       control.control_media({option: option})
     end    
     
-    def disable(macro)
-      control.disable macro
+    def disable_airplane_mode()
+      control.disable_airplane_mode
+    end      
+
+    def disable_bluetooth()
+      control.disable_bluetooth
+    end    
+    
+    def disable_macro(macro)
+      control.disable_macro macro
     end
     
-    def enable(macro)
-      control.enable macro
-    end    
+    def disable_wifi()
+      control.disable_wifi
+    end        
+        
+    def enable_airplane_mode()
+      control.enable_airplane_mode
+    end      
+
+    def enable_bluetooth()
+      control.enable_bluetooth
+    end
+    
+    def enable_macro(macro)
+      control.enable_macro macro
+    end        
+    
+    def enable_wifi()
+      control.enable_wifi
+    end
 
     def fill_clipboard(text)
       control.fill_clipboard clipboard: text
@@ -89,6 +117,14 @@ module RemoteDroid
     def hotspot(state=nil)      
       control.hotspot state
     end
+    
+    def last_loc()
+      query.last_loc
+    end
+    
+    def last_loc_link()
+      "<a href='%s' target='_blank'>map link</a>" % last_loc.link
+    end    
 
     def launch_activity(app)
             
@@ -272,6 +308,18 @@ module RemoteDroid
       
     end      
     
+    def toggle_airplane_mode()
+      control.toggle_airplane_mode
+    end
+    
+    def toggle_bluetooth()
+      control.toggle_bluetooth
+    end    
+    
+    def toggle_wifi()
+      control.toggle_wifi
+    end    
+    
     def torch()
       control.torch
     end    
@@ -288,7 +336,9 @@ module RemoteDroid
       query.volume context
     end
 
-    alias vol volume
+    def vol()
+      volume.music
+    end
       
   end
   

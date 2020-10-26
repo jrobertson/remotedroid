@@ -198,46 +198,41 @@ m: stay awake off
 t: webhook
 a: stay awake off
 
-m: Launch Google Play Music
-t: webhook
-a: Launch Google Play Music
-
-
 m: Media Next
 t: webhook
 a:
   Media Next
-    Simulate Media Button (Google Play Music)
+    Simulate Audio Button
     
 m: Media Pause
 t: webhook
 a:
   Media Pause
-    Simulate Media Button (Google Play Music)
+    Simulate Audio Button
     
 m: Media Play
 t: webhook
 a:
   Media Play
-    Simulate Media Button (Google Play Music)
+    Simulate Audio Button
     
 m: Media Play Pause
 t: webhook
 a:
   Media Play/Pause
-    Simulate Media Button (Google Play Music)
+    Simulate Audio Button
 
 m: Media Previous
 t: webhook
 a:
   Media Previous
-    Simulate Media Button (Google Play Music)
+    Simulate Audio Button
     
 m: Media Stop
 t: webhook
 a:
   Media Stop
-    Simulate Media Button (Google Play Music)    
+    Simulate Audio Button
 
 m: Open website
 v: url
@@ -280,17 +275,59 @@ t: webhook
 a: shortcut Ask Alexa
 
 m: Set Auto Rotate
-; toggle doesn't currently work because of a bug with else if
 v: state
 t: webhook
 a:
   if state = 0
     Auto Rotate On
-  Else If
+  Else If state = 1
     Auto Rotate Off
-  else
+  Else If state = 2
     Auto Rotate Toggle
   end if
+  
+m: Set Bluetooth
+v: state
+t: webhook
+a:
+  if state = 0
+    Enable Bluetooth
+  Else If state = 1
+    Disable Bluetooth
+  Else If state = 2
+    Toggle Bluetooth
+  Else If state = 3
+    Connect Audio Device
+  Else If state = 4
+    Disconnect Audio Device
+  end if
+
+m: Set Airplane Mode
+v: state
+t: webhook
+a:
+  if state = 0
+    Airplane Mode On
+  Else If state = 1
+    Airplane Mode Off
+  Else If state = 2
+    Airplane Mode Toggle
+  end if 
+  
+m: Set Wifi
+v: state
+t: webhook
+a:
+  if state = 0
+    Enable Wifi
+  Else If state = 1
+    Disable Wifi
+  Else If state = 2
+    Toggle Wifi
+  Else If state = 3
+    Connect to Network
+  end if  
+
 
 m: Share location
 t: 

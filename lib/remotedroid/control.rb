@@ -8,12 +8,83 @@ module RemoteDroid
 
     end    
     
+    def airplane_mode()
+      
+      def self.enable()
+        http_exec 'set-airplane-mode', {state: 0}
+      end                
+      
+      def self.on()
+        self.enable
+      end                
+      
+      def self.disable()
+        http_exec 'set-airplane-mode', {state: 1}
+      end
+      
+      def self.off()
+        self.disable
+      end         
+      
+      def self.toggle()
+        http_exec 'set-airplane-mode', {state: 2}
+      end      
+      
+      self
+    end    
+    
     def ask_alexa(options={})
       http_exec 'ask-alexa', options
+    end
+
+    def autorotate()
+      
+      def self.enable()
+        http_exec 'set-auto-rotate', {state: 0}
+      end                
+      
+      def self.on()
+        self.enable
+      end                
+      
+      def self.disable()
+        http_exec 'set-auto-rotate', {state: 1}
+      end
+      
+      def self.off()
+        self.disable
+      end         
+      
+      def self.toggle()
+        http_exec 'set-auto-rotate', {state: 2}
+      end      
+      
+      self
     end    
     
     def bluetooth()
-      #to-do
+      
+      def self.enable()
+        http_exec 'set-bluetooth', {state: 0}
+      end                
+      
+      def self.on()
+        self.enable
+      end                
+      
+      def self.disable()
+        http_exec 'set-bluetooth', {state: 1}
+      end
+      
+      def self.off()
+        self.disable
+      end         
+      
+      def self.toggle()
+        http_exec 'set-bluetooth', {state: 2}
+      end      
+      
+      self
     end
     
     def camera_flash_light(options={})
@@ -28,13 +99,37 @@ module RemoteDroid
       http_exec 'media-' + options[:option].downcase.gsub(/\W/,'-')
     end
     
-    def disable(macro)
+    def disable_airplane_mode()
+      http_exec 'set-airplane-mode', {state: 1}
+    end
+    
+    def disable_bluetooth()
+      http_exec 'set-bluetooth', {state: 1}
+    end    
+        
+    def disable_macro(macro)
       http_exec 'disable-macro', {name: macro}
     end
     
-    def enable(macro)
+    def disable_wifi()
+      http_exec 'set-wifi', {state: 1}
+    end        
+
+    def enable_airplane_mode()
+      http_exec 'set-airplane-mode', {state: 0}
+    end
+    
+    def enable_bluetooth()
+      http_exec 'set-bluetooth', {state: 0}
+    end        
+    
+    def enable_macro(macro)
       http_exec 'enable-macro', {name: macro}
     end
+    
+    def enable_wifi()
+      http_exec 'set-wifi', {state: 0}
+    end    
     
     def fill_clipboard(options={})
       http_exec 'fill-clipboard', options
@@ -217,7 +312,31 @@ module RemoteDroid
       http_exec 'voice-search'
     end    
 
-
+    def wifi()
+      
+      def self.enable()
+        http_exec 'set-wifi', {state: 0}
+      end                
+      
+      def self.on()
+        self.enable
+      end                
+      
+      def self.disable()
+        http_exec 'set-wifi', {state: 1}
+      end
+      
+      def self.off()
+        self.disable
+      end         
+      
+      def self.toggle()
+        http_exec 'set-wifi', {state: 2}
+      end      
+      
+      self
+    end
+    
     def write(s)
             
       d = MacroDroid.new(RD_MACROS, deviceid: @deviceid, 

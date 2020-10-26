@@ -33,6 +33,16 @@ module RemoteDroid
       q(:ip)
     end    
     
+    def last_loc()
+      
+      def self.alt()     q(:last_loc_alt)           end        
+      def self.latlon()  q(:last_latlong)           end        
+      def self.link()    q(:last_loc_link)          end        
+      def self.time()    q(:last_loc_age_timestamp) end                
+          
+      self      
+    end
+    
     def location()      
       
       r = @callback.query(:location)
