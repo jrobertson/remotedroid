@@ -234,7 +234,7 @@ a:
   Media Stop
     Simulate Audio Button
 
-m: Open website
+m: Open web page
 v: url
 t: webhook
 a: goto [lv=url]
@@ -417,15 +417,24 @@ a:
 
 m: Power Button Toggle3
 t: Power Button Toggle (3)
-a: webhook
+a:
+  webhook
+    identifier: power-button-toggle
+    num_toggles: 3
 
 m: Power Button Toggle4
 t: Power Button Toggle (4)
-a: webhook
+a:
+  webhook
+    identifier: power-button-toggle
+    num_toggles: 4
 
 m: Power Button Toggle5
 t: Power Button Toggle (5)
-a: webhook
+a:
+  webhook
+    identifier: power-button-toggle
+    num_toggles: 5
 
 m: Connected to network
 t:

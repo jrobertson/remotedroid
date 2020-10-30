@@ -54,6 +54,11 @@ module RemoteDroid
       @locations.shift if @locations.length > 1000
       
       return r
+    end
+    
+    def power_connected?()
+      status = q(:power)
+      status.downcase == 'on' if status
     end    
 
     def take_picture()      

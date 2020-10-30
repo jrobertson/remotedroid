@@ -205,12 +205,13 @@ module RemoteDroid
       http_exec 'location'
     end    
     
-    def open_website(options={url: ''})
-      http_exec 'open-website', options
+    def open_web_page(options={url: ''})
+      http_exec 'open-web-page', options
     end
     
-    alias goto open_website
-    alias visit open_website
+    alias open_website open_web_page
+    alias goto open_web_page
+    alias visit open_web_page
     
     def say_current_time(options={})
       http_exec 'say-current-time'

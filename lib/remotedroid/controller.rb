@@ -42,7 +42,7 @@ module RemoteDroid
     def export(s, replace: false)
       
       macros = MacroDroid.new(s).macros
-      replace ? @macros = macros : @macros << macros
+      replace ? @macros = macros : @macros.concat(macros)
       
     end
     

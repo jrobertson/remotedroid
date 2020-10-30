@@ -3,9 +3,12 @@ module RemoteDroid
   class Client
     using ColouredText
     
-    def initialize(hostx='127.0.0.1', host: hostx, port: '5777', sps_host: 'sps.home', sps_port: '59000')
+    def initialize(hostx='127.0.0.1', host: hostx, port: '5777', 
+                   sps_host: 'sps.home', sps_port: '59000')
+      
       @drb = OneDrb::Client.new host: host, port: port    
       @sps = SPSPub.new host: sps_host, port: sps_port
+      
     end
     
     def control
@@ -202,6 +205,10 @@ module RemoteDroid
     
     def photo()
       take_picture
+    end
+    
+    def power_connected?()
+      query.power_connected?
     end
     
     def previous()
