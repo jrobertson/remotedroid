@@ -571,10 +571,10 @@ module RemoteDroid
   
   class Server
     
-    def initialize(s, drb_host: '127.0.0.1', deviceid: nil)
+    def initialize(s, drb_host: '127.0.0.1', devices: nil, debug: false)
       
       md = MacroDroid.new(s)
-      rdc = RemoteDroid::Controller.new(md, deviceid: deviceid)
+      rdc = RemoteDroid::Controller.new(md, devices: devices, debug: debug)
       @drb = OneDrb::Server.new host: drb_host, port: '5777', obj: rdc
       
     end
@@ -586,20 +586,25 @@ module RemoteDroid
   end
     
   class TriggerSubscriber < SPSSub
+    using ColouredText
     
     def initialize(host: 'sps.home', drb_host: '127.0.0.1')
       @remote = OneDrb::Client.new host: drb_host, port: '5777'    
       super(host: host)
+      puts 'TriggerSubscriber'.highlight
     end
     
-    def subscribe(topic: 'macrodroid/trigger')
+    def subscribe(topic: 'macrodroid/#/trigger')
       
-      super(topic: topic) do |msg|
+      super(topic: topic) do |msg, topic|
         
+        dev_id = topic.split('/')[1]
         trigger, json = msg.split(/:\s+/,2)
+        
         a = @remote.trigger_fired trigger.to_sym, 
             JSON.parse(json, symbolize_names: true)
-        a.each {|msg| self.notice 'macrodroid/action: ' + msg }
+        
+        a.each {|msg| self.notice "macrodroid/%s/action: %s" % [dev_id, msg] }
         
       end        
     end
@@ -607,13 +612,15 @@ module RemoteDroid
   end
   
   class ActionSubscriber < SPSSub
+    using ColouredText
     
     def initialize(host: 'sps.home', drb_host: '127.0.0.1')
       @remote = OneDrb::Client.new host: drb_host, port: '5777'    
       super(host: host)
+      puts 'ActionSubscriber'.highlight
     end    
     
-    def subscribe(topic: 'macrodroid/action')
+    def subscribe(topic: 'macrodroid/#/action')
       
       super(topic: topic) do |msg|
         
@@ -622,10 +629,21 @@ module RemoteDroid
         
         h = JSON.parse(json, symbolize_names: true)
         
-        if action == 'force_macro_run' and h[:serverside] then
+        if h[:serverside]then
           
-          a = @remote.run_macro(h)
-          a.each {|msg| self.notice 'macrodroid/action: ' + msg }
+          if action == 'force_macro_run' then
+            
+            a = @remote.run_macro(h)
+            a.each {|msg| self.notice 'macrodroid/action: ' + msg }
+            
+          else
+            
+            puts 'action: ' + action.inspect
+            puts 'h: ' + h.inspect
+            r = @remote.local(action.to_sym, h)
+            puts 'r: ' + r.inspect
+            
+          end
 
         else
           
@@ -640,27 +658,57 @@ module RemoteDroid
   end
   
   class ResponseSubscriber < SPSSub
+    using ColouredText
     
     def initialize(host: 'sps.home', drb_host: '127.0.0.1')
       @remote = OneDrb::Client.new host: drb_host, port: '5777'    
       super(host: host)
+      puts 'ResponseSubscriber'.highlight
     end    
     
-    def subscribe(topic: 'macrodroid/response')
+    def subscribe(topic: 'macrodroid/#/response')
       
       super(topic: topic) do |msg|
         
+        #puts 'msg: ' + msg.inspect
         json, id = msg.split(/:\s+/,2).reverse
         
         h = JSON.parse(json, symbolize_names: true)
         id ||= h.keys.first
+        #puts '->' + [id, h].inspect
         @remote.update id.to_sym, h
         
       end
       
     end
     
-  end  
+  end
+
+
+  class Clients
+    using ColouredText
+    
+    attr_reader :devices
+    
+    def initialize(hostx='127.0.0.1', host: hostx, port: '5777', 
+                   sps_host: 'sps.home', sps_port: '59000')  
+    
+      @drb = OneDrb::Client.new host: host, port: port        
+      #sleep 3
+      @devices = @drb.devices.keys.inject({}) do |r, name|
+        obj = RemoteDroid::Client.new(host: host, port: port, 
+                          sps_host: sps_host, sps_port: sps_port, device: name)
+        r.merge!(name => obj)
+      end
+      
+    end
+
+    def device(name)
+      idx = @devices.index name.to_sym
+      @devices[idx] if idx
+    end
+    
+  end
 end
 
 # PASTE_END

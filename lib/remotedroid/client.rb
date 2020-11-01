@@ -4,15 +4,18 @@ module RemoteDroid
     using ColouredText
     
     def initialize(hostx='127.0.0.1', host: hostx, port: '5777', 
-                   sps_host: 'sps.home', sps_port: '59000')
+                   sps_host: 'sps.home', sps_port: '59000', device: nil)
       
+      raise 'supply a device name' unless device
+      
+      @device = device
       @drb = OneDrb::Client.new host: host, port: port    
       @sps = SPSPub.new host: sps_host, port: sps_port
       
     end
     
     def control
-      @drb.control
+      @drb.control @device
     end
     
     def export(s)
@@ -20,7 +23,7 @@ module RemoteDroid
     end
     
     def invoke(s, *args)
-      @drb.invoke(s, *args)
+      @drb.invoke(@device, s, *args)
     end
     
     def macros()
@@ -29,9 +32,9 @@ module RemoteDroid
     
     def query(id=nil)
       
-      return @drb.query unless id
+      return @drb.query(@device) unless id
       t = Time.now
-      h = @drb.query(id)
+      h = @drb.query(@device, id)
       h.merge({latency: (Time.now - t).round(3)})
       
     end

@@ -4,8 +4,8 @@ module RemoteDroid
     
     attr_accessor :locations
     
-    def initialize(callback)
-      @callback = callback
+    def initialize(device, callback)
+      @device, @callback = device, callback
       @locations = []
     end
     
@@ -45,7 +45,7 @@ module RemoteDroid
     
     def location()      
       
-      r = @callback.query(:location)
+      r = @callback.query(@device, :location)
       return r if r.nil? or r.empty? or r[:coords].nil?
       
       r[:coords] = r[:coords].split(',')
@@ -62,11 +62,11 @@ module RemoteDroid
     end    
 
     def take_picture()      
-      @callback.query(:'take-picture')
+      @callback.query(@device, :'take-picture')
     end
     
     def take_screenshot()      
-      @callback.query(:'take-screenshot')
+      @callback.query(@device, :'take-screenshot')
     end   
     
     def volume(context=nil)
@@ -93,7 +93,7 @@ module RemoteDroid
     private
     
     def q(id)
-      @callback.query(id)[id]
+      @callback.query(@device, id)[id]
     end
     
   end

@@ -2,15 +2,20 @@ module RemoteDroid
   
   class Controller
     
-    attr_reader :model, :control, :syslog
+    attr_reader :model, :syslog, :devices
     attr_accessor :title, :macros, :store
 
-    def initialize(mcs, model=MODEL, deviceid: nil, debug: false)
+    def initialize(mcs, model=MODEL, devices: {}, debug: false)
       
       @debug = debug
       @syslog = []
-            
-      @control = Control.new(deviceid)
+       
+      @devices = devices
+      
+      @devices.each do |key, deviceid|
+        devices[key] = Control.new(deviceid)
+      end
+      
       @macros = mcs.macros
       
       if model then
@@ -18,7 +23,7 @@ module RemoteDroid
       end
       
       @store = {}
-      @query = Query.new(self)
+      #@query = Query.new(self)
       
       # enable the required triggers on the Android device
       #
@@ -35,6 +40,10 @@ module RemoteDroid
 =end
     end
     
+    def control(device)
+      @devices[device]
+    end
+    
     def delete_all()
       @macros = []
     end
@@ -46,12 +55,20 @@ module RemoteDroid
       
     end
     
-    def invoke(name, options={})      
+    def invoke(device, name, options={})      
       
-      if @control.respond_to? name.to_sym then
-        @control.method(name.to_sym).call(options)
+      if control(device).respond_to? name.to_sym then
+        control(device).method(name.to_sym).call(options)
       else
-        @control.http_exec name.to_sym, options
+        control(device).http_exec name.to_sym, options
+      end
+    end
+    
+    def local(action, options={})
+      
+      case action.to_sym
+      when :open_web_page
+        open(options[:url_to_open]).read
       end
     end
 
@@ -63,9 +80,9 @@ module RemoteDroid
       @model.op
     end
     
-    def query(id=nil)
+    def query(device, id=nil)
       
-      return @query unless id
+      return Query.new(device, self) unless id
       
       @store[id] = nil
 
@@ -79,19 +96,21 @@ module RemoteDroid
       
       # send http request via macrodroid.com API
       
-      if id.downcase.to_sym == :location then
-        @control.http_exec id
+      identifier, options = if id.downcase.to_sym == :location then
+        id
       elsif sys.include? id
-        @control.http_exec :'query-setting-system', {qvar: id}        
+        [:'query-setting-system', {qvar: id}]
       elsif global.include? id
-        @control.http_exec :'query-setting-global', {qvar: id}
+        [:'query-setting-global', {qvar: id}]
       elsif secure.include? id
-        @control.http_exec :'query-setting-secure', {qvar: id}        
+        [:'query-setting-secure', {qvar: id}]
       elsif id.downcase.to_sym == :'take-picture'
-        @control.http_exec id
+        id
       else
-        @control.http_exec :query, {qvar: id}
+        [:query, {qvar: id}]
       end
+      
+      control(device).http_exec identifier, options
       
       # wait for the local variable to be updated
       # timeout after 5 seoncds
@@ -154,6 +173,11 @@ module RemoteDroid
     alias trigger_fired trigger
     
     def update(id, val)
+      
+      if @debug then
+        puts 'inside update' 
+        puts [id, val].inspect
+      end
       
       key  = if %i(location take-picture).include? id
         id

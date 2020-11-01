@@ -45,7 +45,7 @@ module RemoteDroid
       
       def self.on()
         self.enable
-      end                
+      end
       
       def self.disable()
         http_exec 'set-auto-rotate', {state: 1}
